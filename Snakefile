@@ -15,7 +15,7 @@ rule align:
           - filling gaps with N
         """
     input:
-        sequences = rules.filter.output.sequences,
+        sequences = input_fasta,
         reference = reference
     output:
         alignment = "results/aligned.fasta"
@@ -119,8 +119,6 @@ rule export:
         branch_lengths = rules.refine.output.node_data,
         nt_muts = rules.ancestral.output.node_data,
         aa_muts = rules.translate.output.node_data,
-        colors = colors,
-        lat_longs = lat_longs,
         auspice_config = auspice_config
     output:
         auspice_json = rules.all.input.auspice_json,
@@ -130,8 +128,6 @@ rule export:
             --tree {input.tree} \
             --metadata {input.metadata} \
             --node-data {input.branch_lengths} {input.nt_muts} {input.aa_muts} \
-            --colors {input.colors} \
-            --lat-longs {input.lat_longs} \
             --auspice-config {input.auspice_config} \
             --output {output.auspice_json}
         """
