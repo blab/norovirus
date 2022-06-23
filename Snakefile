@@ -3,55 +3,10 @@ rule all:
         auspice_json = "auspice/norovirus.json",
 
 input_fasta = "data/sequences.fasta",
-input_metadata = "data/metadata.tsv",
+input_metadata = "data/metadata_parsed.tsv",
 reference = "config/norovirus_outgroup.gb",
-# CAN REMOVE COLOR AND LAT_LONGS
-colors = "config/colors.tsv",
-lat_longs = "config/lat_longs.tsv",
 auspice_config = "config/auspice_config.json"
 
-rule index_sequences:
-    message:
-        """
-        Creating an index of sequence composition for filtering.
-        """
-    input:
-        sequences = input_fasta
-    output:
-        sequence_index = "results/sequence_index.tsv"
-    shell:
-        """
-        augur index \
-            --sequences {input.sequences} \
-            --output {output.sequence_index}
-        """
-
-rule filter:
-    message:
-        """
-        Filtering to
-          - {params.sequences_per_group} sequence(s) per {params.group_by!s}
-          - from {params.min_date} onwards
-          - excluding strains in {input.exclude}
-        """
-    input:
-        sequences = input_fasta,
-        sequence_index = "results/sequence_index.tsv",
-        metadata = input_metadata,
-
-    output:
-        sequences = "results/filtered.fasta"
-    shell:
-        """
-        augur filter \
-            --sequences {input.sequences} \
-            --sequence-index {input.sequence_index} \
-            --metadata {input.metadata} \
-            --output {output.sequences} \
-            --group-by {params.group_by} \
-            --sequences-per-group {params.sequences_per_group} \
-            --min-date {params.min_date}
-        """
 
 rule align:
     message:
@@ -162,7 +117,6 @@ rule export:
         tree = rules.refine.output.tree,
         metadata = input_metadata,
         branch_lengths = rules.refine.output.node_data,
-        traits = rules.traits.output.node_data,
         nt_muts = rules.ancestral.output.node_data,
         aa_muts = rules.translate.output.node_data,
         colors = colors,
@@ -175,17 +129,9 @@ rule export:
         augur export v2 \
             --tree {input.tree} \
             --metadata {input.metadata} \
-            --node-data {input.branch_lengths} {input.traits} {input.nt_muts} {input.aa_muts} \
+            --node-data {input.branch_lengths} {input.nt_muts} {input.aa_muts} \
             --colors {input.colors} \
             --lat-longs {input.lat_longs} \
             --auspice-config {input.auspice_config} \
             --output {output.auspice_json}
         """
-
-rule clean:
-    message: "Removing directories: {params}"
-    params:
-        "results ",
-        "auspice"
-    shell:
-        "rm -rfv {params}"

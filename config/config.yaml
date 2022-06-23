@@ -1,4 +1,0 @@
-# Filter sequences to meet these requirements prior to alignment.
-min_date: 2012
-group_by: country year month
-sequences_per_group: 20
