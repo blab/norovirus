@@ -3,6 +3,7 @@
   "maintainers": [
     {"name": "Trevor Bedford", "url": "http://bedford.io/team/trevor-bedford/"}
   ],
+  "build_url": "https://github.com/blab/norovirus",
   "colorings": [
     {
       "key": "gt",
