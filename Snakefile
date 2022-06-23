@@ -1,11 +1,11 @@
 rule all:
     input:
-        auspice_json = "auspice/norovirus.json",
+        auspice_json = "auspice/norovirus.JSON",
 
-input_fasta = "data/sequences.fasta",
-input_metadata = "data/metadata_parsed.tsv",
+input_fasta = "results/sequence_output.fasta",
+input_metadata = "results/metadata_parsed.tsv",
 reference = "config/norovirus_outgroup.gb",
-auspice_config = "config/auspice_config.json"
+auspice_config = "auspice/auspice_config.JSON"
 
 
 rule align:
@@ -25,7 +25,8 @@ rule align:
             --sequences {input.sequences} \
             --reference-sequence {input.reference} \
             --output {output.alignment} \
-            --fill-gaps
+            --fill-gaps \
+            --nthreads 4
         """
 
 rule tree:
@@ -38,7 +39,8 @@ rule tree:
         """
         augur tree \
             --alignment {input.alignment} \
-            --output {output.tree}
+            --output {output.tree} \
+            --nthreads 4
         """
 
 rule refine:
