@@ -46,6 +46,7 @@ FEATURES             Location/Qualifiers
                      protease, and 3D RNA-dependent RNA polymerase of
                      picornavirus"
                      /codon_start=1
+                     /gene="ORF1"
                      /product="nonstructural polyprotein"
                      /protein_id="AAB50465.1"
                      /translation="MMMASKDVVPTAASSENANNNSSIKSRLLARLKGSGGATSPPNS
@@ -83,6 +84,7 @@ FEATURES             Location/Qualifiers
      CDS             5358..6950
                      /note="orf2"
                      /codon_start=1
+                     /gene="ORF2"
                      /product="58 kd capsid protein"
                      /protein_id="AAB50466.2"
                      /translation="MMMASKDATSSVDGASGAGQLVPEVNASDPLAMDPVAGSSTAVA
@@ -98,6 +100,7 @@ FEATURES             Location/Qualifiers
      CDS             6950..7588
                      /note="encodes small basic protein of unknown function"
                      /codon_start=1
+                     /gene="ORF3"
                      /product="orf3"
                      /protein_id="AAB50467.1"
                      /translation="MAQAIIGAIAASTAGSALGAGIQVGGEAALQSQRYQQNLQLQEN
