@@ -1,3 +1,4 @@
+strain,begin,length,end,BLAST,BLAST score,refseq,reverse complement,ORF1 type,ORF1 type support,ORF1 subtype,ORF1 subtype support,ORF2 type,ORF2 type support,ORF2 subtype,ORF2 subtype support
 AB933740|HuGII.4Chiba22009JP|N,5,7509,7471,Norovirus GII,,NC_029646.1,FALSE,GII.P4,100,New_Orleans_2009,96,GII.4,100,New_Orleans_2009,98
 AB933760|HuGII.4Hiroshima52011,5,7509,7471,Norovirus GII,,NC_029646.1,FALSE,GII.P4,100,New_Orleans_2009,100,GII.4,100,New_Orleans_2009,100
 KR154230|HuGII.17CGMH692015TW|,11,7552,7518,Norovirus GII,,NC_029646.1,FALSE,GII.P17,100,,,GII.17,100,,

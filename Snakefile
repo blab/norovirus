@@ -1,12 +1,52 @@
 rule all:
     input:
-        auspice_json = "auspice/norovirus.JSON",
+        auspice_json = "auspice/norovirus.json",
 
-input_fasta = "results/sequence_output.fasta",
-input_metadata = "results/metadata_parsed.tsv",
 reference = "config/norovirus_outgroup.gb",
-dropped_strains = "config/dropped_strains.txt",
-auspice_config = "auspice/auspice_config.JSON"
+auspice_config = "config/auspice_config.json"
+
+rule parse:
+    input:
+        sequences = "data/sequences_vipr.fasta",
+    output:
+        sequences = "results/sequences.fasta",
+        metadata = "results/metadata_vipr.tsv"
+    params:
+        fields = ["strain","strain_name","segment","date","host","country"]
+    shell:
+        """
+        augur parse \
+            --sequences {input.sequences} \
+            --output-sequences {output.sequences} \
+            --output-metadata {output.metadata} \
+            --fix-dates monthfirst \
+            --fields {params.fields}
+        """
+rule prepare_genotype_metadata:
+    input:
+        metadata = expand("data/genomicdetective_results{i}.csv", i = [1,2,3])
+    output:
+        result = "results/metadata_genomicdetective.tsv"
+    params:
+        fields = "ORF2_type,strain"
+    shell:
+        """
+        csvtk concat {input.metadata} \
+            | csvtk rename -f "ORF2 type" -n "ORF2_type" \
+            | csvtk cut -f {params.fields} \
+            | csvtk --out-tabs replace -f "strain" -p "\|.*$" -r "" > {output.result}
+        """
+
+rule join_metadata:
+    input:
+        genomicdetective_metadata = "results/metadata_genomicdetective.tsv",
+        vipr_metadata = "results/metadata_vipr.tsv"
+    output:
+        result = "results/metadata.tsv"
+    shell:
+        """
+        csvtk -t join -f "strain" {input.vipr_metadata} {input.genomicdetective_metadata} --left-join --na "NA" > {output.result}
+        """
 
 rule filter:
     message:
@@ -18,11 +58,12 @@ rule filter:
           - minimum genome length of {params.min_length} (67% of Norovirus virus genome)
         """
     input:
-        sequences = input_fasta,
-        metadata = input_metadata,
-        exclude = dropped_strains
+        sequences = "results/sequences.fasta",
+        metadata = "results/metadata.tsv",
+        exclude = "config/dropped_strains.txt"
     output:
-        sequences = "results/filtered.fasta"
+        sequences = "results/filtered.fasta",
+        metadata = "results/filtered_metadata.tsv"
     params:
         group_by = "year ORF2_type",
         sequences_per_group = 30,
@@ -35,7 +76,8 @@ rule filter:
             --query "ORF2_type in ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17']" \
             --metadata {input.metadata} \
             --exclude {input.exclude} \
-            --output {output.sequences} \
+            --output-sequences {output.sequences} \
+            --output-metadata {output.metadata} \
             --min-date {params.min_date} \
             --group-by {params.group_by} \
             --sequences-per-group {params.sequences_per_group} \
@@ -89,7 +131,7 @@ rule refine:
     input:
         tree = rules.tree.output.tree,
         alignment = rules.align.output,
-        metadata = input_metadata
+        metadata = "results/filtered_metadata.tsv"
     output:
         tree = "results/tree.nwk",
         node_data = "results/branch_lengths.json"
@@ -151,7 +193,7 @@ rule export:
     message: "Exporting data files for for auspice"
     input:
         tree = rules.refine.output.tree,
-        metadata = input_metadata,
+        metadata = "results/filtered_metadata.tsv",
         branch_lengths = rules.refine.output.node_data,
         nt_muts = rules.ancestral.output.node_data,
         aa_muts = rules.translate.output.node_data,

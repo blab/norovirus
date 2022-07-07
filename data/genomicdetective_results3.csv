@@ -1,3 +1,4 @@
+strain,begin,length,end,BLAST,BLAST score,refseq,reverse complement,ORF1 type,ORF1 type support,ORF1 subtype,ORF1 subtype support,ORF2 type,ORF2 type support,ORF2 subtype,ORF2 subtype support
 DQ366347|HuOsakaNI2004JP|NA|20,1,7558,7512,Norovirus GII,,NC_029646.1,FALSE,GII.P40 (GII.P22),100,,,GII.2,100,,
 AY134748|UNKNOWN_AY134748|NA|N,1,7537,7518,Norovirus GII,,NC_029646.1,FALSE,GII.P30 (GII.Pc),100,,,GII.2,100,,
 AB084071|GIFU99|NA|NA|Human|Ja,1,7562,7518,Norovirus GII,,NC_029646.1,FALSE,GII.P7,100,,,GII.6,100,,
