@@ -5,8 +5,42 @@ rule all:
 input_fasta = "results/sequence_output.fasta",
 input_metadata = "results/metadata_parsed.tsv",
 reference = "config/norovirus_outgroup.gb",
+dropped_strains = "config/dropped_strains.txt",
 auspice_config = "auspice/auspice_config.JSON"
 
+rule filter:
+    message:
+        """
+        Filtering to
+          - {params.sequences_per_group} sequence(s) per {params.group_by!s}
+          - from {params.min_date} onwards
+          - excluding strains in {input.exclude}
+          - minimum genome length of {params.min_length} (67% of Norovirus virus genome)
+        """
+    input:
+        sequences = input_fasta,
+        metadata = input_metadata,
+        exclude = dropped_strains
+    output:
+        sequences = "results/filtered.fasta"
+    params:
+        group_by = "year ORF2_type",
+        sequences_per_group = 30,
+        min_date = 1950,
+        min_length = 5032
+    shell:
+        """
+        augur filter \
+            --sequences {input.sequences} \
+            --query "ORF2_type in ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17']" \
+            --metadata {input.metadata} \
+            --exclude {input.exclude} \
+            --output {output.sequences} \
+            --min-date {params.min_date} \
+            --group-by {params.group_by} \
+            --sequences-per-group {params.sequences_per_group} \
+            --min-length {params.min_length}
+        """
 
 rule align:
     message:
@@ -15,7 +49,7 @@ rule align:
           - filling gaps with N
         """
     input:
-        sequences = input_fasta,
+        sequences = rules.filter.output.sequences,
         reference = reference
     output:
         alignment = "results/aligned.fasta"
@@ -67,15 +101,15 @@ rule refine:
         """
         augur refine \
             --tree {input.tree} \
+            --root "best" \
+            --coalescent {params.coalescent} \
+            --clock-filter-iqd {params.clock_filter_iqd} \
             --alignment {input.alignment} \
             --metadata {input.metadata} \
             --output-tree {output.tree} \
             --output-node-data {output.node_data} \
             --timetree \
-            --coalescent {params.coalescent} \
             --date-confidence \
-            --date-inference {params.date_inference} \
-            --clock-filter-iqd {params.clock_filter_iqd}
         """
 
 rule ancestral:

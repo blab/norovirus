@@ -6,8 +6,8 @@
   "build_url": "https://github.com/blab/norovirus",
   "colorings": [
     {
-      "key": "gt",
-      "title": "Genotype",
+      "key": "ORF2_type",
+      "title": "Vp1 Genotype",
       "type": "categorical"
     },
     {
@@ -16,18 +16,8 @@
       "type": "continuous"
     },
     {
-      "key": "author",
-      "title": "Author",
-      "type": "categorical"
-    },
-    {
       "key": "country",
       "title": "Country",
-      "type": "categorical"
-    },
-    {
-      "key": "region",
-      "title": "Region",
       "type": "categorical"
     }
   ],
@@ -45,7 +35,6 @@
   },
   "filters": [
     "country",
-    "region",
-    "author"
+    "ORF2_type"
   ]
 }
