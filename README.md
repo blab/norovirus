@@ -2,7 +2,7 @@
 Nextstrain analysis of Norovirus
 
 ## Introduction
-This is the Nextstrain build for Norovirus
+This is the [Nextstrain build for Norovirus](https://nextstrain.org/community/blab/norovirus/all)
 
 ## Data Curation
 All sequence data is from Vipr or Genbank. The full Norovirus genomic length is ~7,547 bp long. In this build, we filtered for human Norovirus sequences that are at least 5032bp long (2/3 of the full length). We ended up with a dataset of 1981 sequences from 1968-2022, from 42 countries.
