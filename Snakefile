@@ -22,6 +22,19 @@ rule parse:
             --fix-dates monthfirst \
             --fields {params.fields}
         """
+rule clean_dates:
+    input:
+        metadata = "results/metadata_vipr.tsv"
+    output:
+        result = "results/metadata_vipr_cleaned_dates.tsv"
+    params:
+        columns = ["strain","strain_name","segment","date","host","country"]
+    shell:
+        """
+        ./scripts/tsv-to-ndjson < {input.metadata} \
+            | ./scripts/transform-date-fields --expected-date-formats "%Y_%m_%d" "%Y_%m_%dT%H:%M:%SZ" "%Y_%m" "%Y-%m-%d" "%Y-XX-XX" "%Y-%m" --date-fields date \
+            | ./scripts/ndjson-to-tsv --metadata-columns {params.columns} --metadata {output.result}
+        """
 rule prepare_genotype_metadata:
     input:
         metadata = expand("data/genomicdetective_results{i}.csv", i = [1,2,3])
@@ -40,7 +53,7 @@ rule prepare_genotype_metadata:
 rule join_metadata:
     input:
         genomicdetective_metadata = "results/metadata_genomicdetective.tsv",
-        vipr_metadata = "results/metadata_vipr.tsv"
+        vipr_metadata = "results/metadata_vipr_cleaned_dates.tsv"
     output:
         result = "results/metadata.tsv"
     shell:
