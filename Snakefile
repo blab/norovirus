@@ -1,6 +1,8 @@
+GENES = ['3CLpro', 'NTPase', 'p22', 'p48', 'rdrp', 'VP1', 'VP2', 'VPg']
+
 rule all:
     input:
-        auspice_json = "auspice/norovirus.json",
+        expand("auspice/norovirus_all_{gene}.json", gene=GENES),
 
 reference = "config/norovirus_outgroup.gb",
 auspice_config = "config/auspice_config.json"
@@ -22,7 +24,8 @@ rule parse:
             --fix-dates monthfirst \
             --fields {params.fields}
         """
-rule clean_dates:
+
+rule clean_dates_and_country:
     input:
         metadata = "results/metadata_vipr.tsv"
     output:
@@ -31,7 +34,8 @@ rule clean_dates:
         columns = ["strain","strain_name","segment","date","host","country"]
     shell:
         """
-        ./scripts/tsv-to-ndjson < {input.metadata} \
+        cat {input.metadata} | csvtk replace -t -f "country" -p "Viet_Nam" -r 'Vietnam' \
+            | ./scripts/tsv-to-ndjson \
             | ./scripts/transform-date-fields --expected-date-formats "%Y_%m_%d" "%Y_%m_%dT%H:%M:%SZ" "%Y_%m" "%Y-%m-%d" "%Y-XX-XX" "%Y-%m" --date-fields date \
             | ./scripts/ndjson-to-tsv --metadata-columns {params.columns} --metadata {output.result}
         """
@@ -117,13 +121,25 @@ rule align:
             --fill-gaps \
             --nthreads 4
         """
+rule parse_gene:
+    input:
+        reference = reference,
+        alignment = "results/aligned.fasta"
+    output:
+        output = "results/{gene}/aligned.fasta"
+    params:
+        percentage = .8
+    shell:
+        """
+        python scripts/gene_parsing.py --alignment {input.alignment} --reference {input.reference} --gene {wildcards.gene} --output {output.output} --percentage {params.percentage}
+        """
 
 rule tree:
     message: "Building tree"
     input:
-        alignment = rules.align.output.alignment
+        alignment = "results/{gene}/aligned.fasta"
     output:
-        tree = "results/tree_raw.nwk"
+        tree = "results/{gene}/tree_raw.nwk"
     shell:
         """
         augur tree \
@@ -142,12 +158,12 @@ rule refine:
           - filter tips more than {params.clock_filter_iqd} IQDs from clock expectation
         """
     input:
-        tree = rules.tree.output.tree,
-        alignment = rules.align.output,
+        tree = "results/{gene}/tree_raw.nwk",
+        alignment = "results/{gene}/aligned.fasta",
         metadata = "results/filtered_metadata.tsv"
     output:
-        tree = "results/tree.nwk",
-        node_data = "results/branch_lengths.json"
+        tree = "results/{gene}/tree.nwk",
+        node_data = "results/{gene}/branch_lengths.json"
     params:
         coalescent = "opt",
         date_inference = "marginal",
@@ -170,10 +186,10 @@ rule refine:
 rule ancestral:
     message: "Reconstructing ancestral sequences and mutations"
     input:
-        tree = rules.refine.output.tree,
-        alignment = rules.align.output
+        tree = "results/{gene}/tree.nwk",
+        alignment = "results/{gene}/aligned.fasta"
     output:
-        node_data = "results/nt_muts.json"
+        node_data = "results/{gene}/nt_muts.json"
     params:
         inference = "joint"
     shell:
@@ -188,11 +204,11 @@ rule ancestral:
 rule translate:
     message: "Translating amino acid sequences"
     input:
-        tree = rules.refine.output.tree,
-        node_data = rules.ancestral.output.node_data,
+        tree = "results/{gene}/tree.nwk",
+        node_data = "results/{gene}/nt_muts.json",
         reference = reference
     output:
-        node_data = "results/aa_muts.json"
+        node_data = "results/{gene}/aa_muts.json"
     shell:
         """
         augur translate \
@@ -205,14 +221,14 @@ rule translate:
 rule export:
     message: "Exporting data files for for auspice"
     input:
-        tree = rules.refine.output.tree,
+        tree = "results/{gene}/tree.nwk",
         metadata = "results/filtered_metadata.tsv",
-        branch_lengths = rules.refine.output.node_data,
-        nt_muts = rules.ancestral.output.node_data,
-        aa_muts = rules.translate.output.node_data,
+        branch_lengths = "results/{gene}/branch_lengths.json",
+        nt_muts = "results/{gene}/nt_muts.json",
+        aa_muts = "results/{gene}/aa_muts.json",
         auspice_config = auspice_config
     output:
-        auspice_json = rules.all.input.auspice_json,
+        auspice_json = "auspice/norovirus_all_{gene}.json",
     shell:
         """
         augur export v2 \
