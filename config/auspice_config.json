@@ -11,6 +11,11 @@
       "type": "categorical"
     },
     {
+      "key": "ORF1_type",
+      "title": "Rdrp Genotype",
+      "type": "categorical"
+    },
+    {
       "key": "num_date",
       "title": "Date",
       "type": "continuous"
@@ -35,6 +40,7 @@
   },
   "filters": [
     "country",
-    "ORF2_type"
+    "ORF2_type",
+    "ORF1_type"
   ]
 }

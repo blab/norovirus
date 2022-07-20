@@ -1,8 +1,10 @@
-GENES = ['3CLpro', 'NTPase', 'p22', 'p48', 'rdrp', 'VP1', 'VP2', 'VPg']
+GENES = ['3CLpro', 'NTPase', 'p22', 'p48', 'rdrp', 'VP1', 'VP2', 'VPg', 'genome']
+# rdrp = ['GII.P4', 'GII.P16', 'GII.P31 (GII.Pe)', 'GII.P17', 'GII.P21 (GII.Pb)', 'GII.P7']
+GROUP = ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17', 'all']
 
 rule all:
     input:
-        expand("auspice/norovirus_all_{gene}.json", gene=GENES),
+        expand("auspice/norovirus_{group}_{gene}.json", gene=GENES, group=GROUP),
 
 reference = "config/norovirus_outgroup.gb",
 auspice_config = "config/auspice_config.json"
@@ -45,11 +47,12 @@ rule prepare_genotype_metadata:
     output:
         result = "results/metadata_genomicdetective.tsv"
     params:
-        fields = "ORF2_type,strain"
+        fields = "ORF2_type,strain,ORF1_type"
     shell:
         """
         csvtk concat {input.metadata} \
             | csvtk rename -f "ORF2 type" -n "ORF2_type" \
+            | csvtk rename -f "ORF1 type" -n "ORF1_type" \
             | csvtk cut -f {params.fields} \
             | csvtk --out-tabs replace -f "strain" -p "\|.*$" -r "" > {output.result}
         """
@@ -72,6 +75,7 @@ rule filter:
           - {params.sequences_per_group} sequence(s) per {params.group_by!s}
           - from {params.min_date} onwards
           - excluding strains in {input.exclude}
+          - excluding ambiguous dates by {params.ambiguous_exclude}
           - minimum genome length of {params.min_length} (67% of Norovirus virus genome)
         """
     input:
@@ -79,25 +83,30 @@ rule filter:
         metadata = "results/metadata.tsv",
         exclude = "config/dropped_strains.txt"
     output:
-        sequences = "results/filtered.fasta",
-        metadata = "results/filtered_metadata.tsv"
+        sequences = "results/{group}/{gene}/filtered.fasta",
+        metadata = "results/{group}/{gene}/filtered_metadata.tsv",
+        log = "results/{group}/{gene}/filtered_log.tsv"
     params:
-        group_by = "year ORF2_type",
+        group_by = "year ORF2_type ORF1_type",
         sequences_per_group = 30,
         min_date = 1950,
-        min_length = 5032
+        ambiguous_exclude = 'year',
+        min_length = 5032,
+        query = lambda wildcards: f"ORF2_type == '{wildcards.group}'" if wildcards.group != 'all' else "ORF2_type in ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17']"
     shell:
         """
         augur filter \
             --sequences {input.sequences} \
-            --query "ORF2_type in ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17']" \
+            --query "{params.query}" \
             --metadata {input.metadata} \
             --exclude {input.exclude} \
             --output-sequences {output.sequences} \
             --output-metadata {output.metadata} \
+            --output-log {output.log} \
             --min-date {params.min_date} \
             --group-by {params.group_by} \
             --sequences-per-group {params.sequences_per_group} \
+            --exclude-ambiguous-dates-by {params.ambiguous_exclude}\
             --min-length {params.min_length}
         """
 
@@ -108,10 +117,10 @@ rule align:
           - filling gaps with N
         """
     input:
-        sequences = rules.filter.output.sequences,
+        sequences = "results/{group}/{gene}/filtered.fasta",
         reference = reference
     output:
-        alignment = "results/aligned.fasta"
+        alignment = "results/{group}/{gene}/alignment.fasta"
     shell:
         """
         augur align \
@@ -124,9 +133,9 @@ rule align:
 rule parse_gene:
     input:
         reference = reference,
-        alignment = "results/aligned.fasta"
+        alignment = "results/{group}/{gene}/alignment.fasta"
     output:
-        output = "results/{gene}/aligned.fasta"
+        output = "results/{group}/{gene}/aligned.fasta"
     params:
         percentage = .8
     shell:
@@ -137,9 +146,9 @@ rule parse_gene:
 rule tree:
     message: "Building tree"
     input:
-        alignment = "results/{gene}/aligned.fasta"
+        alignment = "results/{group}/{gene}/aligned.fasta"
     output:
-        tree = "results/{gene}/tree_raw.nwk"
+        tree = "results/{group}/{gene}/tree_raw.nwk"
     shell:
         """
         augur tree \
@@ -153,19 +162,17 @@ rule refine:
         """
         Refining tree
           - estimate timetree
-          - use {params.coalescent} coalescent timescale
           - estimate {params.date_inference} node dates
           - filter tips more than {params.clock_filter_iqd} IQDs from clock expectation
         """
     input:
-        tree = "results/{gene}/tree_raw.nwk",
-        alignment = "results/{gene}/aligned.fasta",
-        metadata = "results/filtered_metadata.tsv"
+        tree = "results/{group}/{gene}/tree_raw.nwk",
+        alignment = "results/{group}/{gene}/aligned.fasta",
+        metadata = "results/{group}/{gene}/filtered_metadata.tsv"
     output:
-        tree = "results/{gene}/tree.nwk",
-        node_data = "results/{gene}/branch_lengths.json"
+        tree = "results/{group}/{gene}/tree.nwk",
+        node_data = "results/{group}/{gene}/branch_lengths.json"
     params:
-        coalescent = "opt",
         date_inference = "marginal",
         clock_filter_iqd = 4
     shell:
@@ -173,7 +180,6 @@ rule refine:
         augur refine \
             --tree {input.tree} \
             --root "best" \
-            --coalescent {params.coalescent} \
             --clock-filter-iqd {params.clock_filter_iqd} \
             --alignment {input.alignment} \
             --metadata {input.metadata} \
@@ -186,10 +192,10 @@ rule refine:
 rule ancestral:
     message: "Reconstructing ancestral sequences and mutations"
     input:
-        tree = "results/{gene}/tree.nwk",
-        alignment = "results/{gene}/aligned.fasta"
+        tree = "results/{group}/{gene}/tree.nwk",
+        alignment = "results/{group}/{gene}/aligned.fasta"
     output:
-        node_data = "results/{gene}/nt_muts.json"
+        node_data = "results/{group}/{gene}/nt_muts.json"
     params:
         inference = "joint"
     shell:
@@ -204,11 +210,11 @@ rule ancestral:
 rule translate:
     message: "Translating amino acid sequences"
     input:
-        tree = "results/{gene}/tree.nwk",
-        node_data = "results/{gene}/nt_muts.json",
+        tree = "results/{group}/{gene}/tree.nwk",
+        node_data = "results/{group}/{gene}/nt_muts.json",
         reference = reference
     output:
-        node_data = "results/{gene}/aa_muts.json"
+        node_data = "results/{group}/{gene}/aa_muts.json"
     shell:
         """
         augur translate \
@@ -221,14 +227,16 @@ rule translate:
 rule export:
     message: "Exporting data files for for auspice"
     input:
-        tree = "results/{gene}/tree.nwk",
-        metadata = "results/filtered_metadata.tsv",
-        branch_lengths = "results/{gene}/branch_lengths.json",
-        nt_muts = "results/{gene}/nt_muts.json",
-        aa_muts = "results/{gene}/aa_muts.json",
+        tree = "results/{group}/{gene}/tree.nwk",
+        metadata = "results/{group}/{gene}/filtered_metadata.tsv",
+        branch_lengths = "results/{group}/{gene}/branch_lengths.json",
+        nt_muts = "results/{group}/{gene}/nt_muts.json",
+        aa_muts = "results/{group}/{gene}/aa_muts.json",
         auspice_config = auspice_config
     output:
-        auspice_json = "auspice/norovirus_all_{gene}.json",
+        auspice_json = "auspice/norovirus_{group}_{gene}.json",
+    params:
+        title = "Norovirus {group} {gene} Build"
     shell:
         """
         augur export v2 \
@@ -236,5 +244,6 @@ rule export:
             --metadata {input.metadata} \
             --node-data {input.branch_lengths} {input.nt_muts} {input.aa_muts} \
             --auspice-config {input.auspice_config} \
-            --output {output.auspice_json}
+            --output {output.auspice_json} \
+            --title "{params.title}"
         """
