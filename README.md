@@ -5,15 +5,9 @@ Nextstrain analysis of Norovirus - this repository analyzes viral genomes using 
 This is the [Nextstrain build for Norovirus](https://nextstrain.org/community/blab/norovirus/all/genome). The build encompasses fetching data, preparing it for analysis, doing quality control, performing analyses, and saving the results in a format suitable for visualization (with auspice). This involves running components of Nextstrain such as augur.
 
 ### Installations
-These programs will need to be installed for the workflow to run (assuming that conda, bioconda, and mamba are already installed. If not, please install them first):
-* Augur
-     `conda install -c bioconda augur`
-* Snakemake
-     `conda install -n base -c conda-forge mamba`
-* csvtk
-     `conda install -c bioconda csvtk`
-* Biopython
-     `conda install -c conda-forge biopython`
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) and mamba are required to run the workflow. After installing Miniconda, install mamba using:
+
+`conda install mamba -n base -c conda-forge`
 
 ### Creating an Environment
 Create an environment to test this Nextstrain workflow.
