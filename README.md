@@ -12,7 +12,7 @@ This is the [Nextstrain build for Norovirus](https://nextstrain.org/community/bl
 ### Creating an Environment
 Create an environment to test this Nextstrain workflow.
 
-`mamba env create -n nextstrain-workflow -f envs/nextstrain.yaml`
+`mamba env create -n nextstrain-norovirus -f envs/nextstrain.yaml`
 
 Activate the environment to use the workflow.
 
