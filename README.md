@@ -15,6 +15,15 @@ These programs will need to be installed for the workflow to run (assuming that 
 * Biopython
      `conda install -c conda-forge biopython`
 
+### Creating an Environment
+Create an environment to test this Nextstrain workflow.
+
+`mamba env create -n nextstrain-workflow -f envs/nextstrain.yaml`
+
+Activate the environment to use the workflow.
+
+`conda activate nextstrain-norovirus`
+
 ### Getting started with own input files
 To create your own Norovirus trees, you will need to provide the sequences in the form of a fasta file, and name it sequences_vipr.fasta. You will also need to provide metadata annotation files from the genomic detective norovirus typing tool. If you wish, you can also replace the reference sequence file with your own GenBank file, by naming it norovirus_outgroup and placing it in the config folder.
 
