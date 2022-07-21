@@ -27,6 +27,9 @@ Steps for creating genomic detective annotation files:
 ## Data Curation
 All sequence data is from Vipr or Genbank. The full Norovirus genomic length is ~7,547 bp long. In this build, we filtered for human Norovirus sequences that are at least 5032bp long (2/3 of the full length). We ended up with a dataset of 1981 sequences from 1968-2022, from 42 countries.
 
+## Adaptive Evolution 
+## Analysis
+
 ## Further Reading
 Relevant papers for further reading:
 * [Norwalk Virus Minor Capsid Protein VP2 Associates within the VP1 Shell Domain](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624303/)
