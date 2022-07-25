@@ -23,7 +23,7 @@ Run workflow
 `snakemake --cores 4`
 
 ### Getting started with own input files
-To create your own Norovirus trees, you will need to provide the sequences in the form of a fasta file, and name it sequences_vipr.fasta. You will also need to provide metadata annotation files from the genomic detective norovirus typing tool. If you wish, you can also replace the reference sequence file with your own GenBank file, by naming it norovirus_outgroup and placing it in the config folder.
+To create your own Norovirus trees, you will need to provide the sequences in the form of a fasta file, and name it sequences_vipr.fasta. You will also need to provide metadata annotation files from the genomic detective norovirus typing tool. If you wish, you can also replace the reference sequence file with your own GenBank file, by naming it norovirus_outgroup_{Vp1 genogroup} and placing it in the config folder.
 
 Steps for creating genomic detective annotation files:
 1. Break sequences.fasta file into multiple files (<1000 sequences each) using *`seqkit split sequences_vipr.fasta -n (total number of sequences/number of files)`
