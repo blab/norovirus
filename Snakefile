@@ -1,12 +1,12 @@
 GENES = ['3CLpro', 'NTPase', 'p22', 'p48', 'rdrp', 'VP1', 'VP2', 'VPg', 'genome']
 # rdrp = ['GII.P4', 'GII.P16', 'GII.P31 (GII.Pe)', 'GII.P17', 'GII.P21 (GII.Pb)', 'GII.P7']
 GROUP = ['GII.6', 'GII.4', 'GII.2', 'GII.3', 'GII.17', 'all']
+#GENES = ['rdrp','VP1','genome']
+#GROUP = ['GII.6', 'GII.4', 'all']
 
 rule all:
     input:
         expand("auspice/norovirus_{group}_{gene}.json", gene=GENES, group=GROUP),
-
-reference = "config/norovirus_outgroup.gb",
 auspice_config = "config/auspice_config.json"
 
 rule parse:
@@ -109,6 +109,19 @@ rule filter:
             --exclude-ambiguous-dates-by {params.ambiguous_exclude}\
             --min-length {params.min_length}
         """
+rule parse_reference:
+    message:
+        """
+        parsing gene from reference genbank
+        """
+    input:
+        reference = "config/norovirus_outgroup_{group}.gb"
+    output:
+        output = "config/norovirus_reference_{group}_{gene}.gb"
+    shell:
+        """
+        python scripts/reference_parsing.py --reference {input.reference} --gene {wildcards.gene} --output {output.output}
+        """
 
 rule align:
     message:
@@ -118,7 +131,7 @@ rule align:
         """
     input:
         sequences = "results/{group}/{gene}/filtered.fasta",
-        reference = reference
+        reference = "config/norovirus_reference_{group}_{gene}.gb"
     output:
         alignment = "results/{group}/{gene}/alignment.fasta"
     shell:
@@ -132,7 +145,7 @@ rule align:
         """
 rule parse_gene:
     input:
-        reference = reference,
+        reference = "config/norovirus_reference_{group}_{gene}.gb",
         alignment = "results/{group}/{gene}/alignment.fasta"
     output:
         output = "results/{group}/{gene}/aligned.fasta"
@@ -212,7 +225,7 @@ rule translate:
     input:
         tree = "results/{group}/{gene}/tree.nwk",
         node_data = "results/{group}/{gene}/nt_muts.json",
-        reference = reference
+        reference = "config/norovirus_reference_{group}_{gene}.gb"
     output:
         node_data = "results/{group}/{gene}/aa_muts.json"
     shell:
