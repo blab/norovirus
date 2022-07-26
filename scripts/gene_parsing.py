@@ -29,8 +29,11 @@ if args.gene[0].lower() != 'genome':
     for seq_record in SeqIO.parse(args.reference, "genbank"):
         for feature in seq_record.features:
             if feature.type == 'CDS':
+                #print(list(feature.qualifiers.keys()))
                 if 'gene' in feature.qualifiers.keys():
+                    #print('here')
                     gene_name = feature.qualifiers['gene']
+                    #gene_name = args.gene[0].lower()
                     gene_location = feature.location
                     genes[gene_name[0].lower()] = gene_location
 
