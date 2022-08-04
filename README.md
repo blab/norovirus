@@ -35,7 +35,14 @@ Steps for creating genomic detective annotation files:
 All sequence data is from Vipr or Genbank. The full Norovirus genomic length is ~7,547 bp long. In this build, we filtered for human Norovirus sequences that are at least 5032bp long (2/3 of the full length). We ended up with a dataset of 1981 sequences from 1968-2022, from 42 countries.
 
 ## Adaptive Evolution 
+<p align="center">
+     <img src="images/all-genes-norovirus-plot.png" alt="norovirus all strains plot" width="300"/>
+</p>
+
+<img src="images/norovirus_adaptation_accumulation.png" alt="norovirus all genes plot" width="500"/><img src="images/norovirus_gii4_rates_allgenes_new.png" alt="norovirus comparison plot" width="500"/>
+
 ## Analysis
+From our analysis, we found that out of all the genotypes in the dataset, GII.4 had the highest rate of adaptive mutations, followed by GII.3. Out of the genes, we found that the VP1 protein had the highest adaptive mutation rate, followed by P22 and VP2. Based on our data, we can hypothesize that VP1, P22, and VP2 are possibly undergoing immune evasion, and could be potential targets for vaccine development. We can also hypothesize that if a vaccine were to be developed for the GII.4 genotype, it would need to be updated rather regularly to match the mutation rate of the virus.  
 
 ## Further Reading
 Relevant papers for further reading:
