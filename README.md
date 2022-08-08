@@ -1,5 +1,8 @@
-# Norovirus
-Nextstrain analysis of Norovirus - this repository analyzes viral genomes using Nextstrain to understand how Norovirus evolves and spreads.
+# Phylogenetic Modeling Analysis of Norovirus Reveals Varying Genotype and Gene Adaptive Mutation Rates
+
+Allison Li, John Huddleston, Katie Kistler, Trevor Bedford
+
+University of Washington, Fred Hutchinson Cancer Center (VIDD)
 
 ## Introduction
 This is the [Nextstrain build for Norovirus](https://nextstrain.org/community/blab/norovirus/all/genome). The build encompasses fetching data, preparing it for analysis, doing quality control, performing analyses, and saving the results in a format suitable for visualization (with auspice). This involves running components of Nextstrain such as augur.
